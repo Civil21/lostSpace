@@ -1,12 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Lost space Menu</title>
+	<title>LostSpace Menu</title>
 	<link rel="stylesheet" type="text/css" href="css/main.css" />
+	<script src="js/three.js"></script>
+	<script src="js/OrbitControls.js"></script>
+	<script src="js/scenes.js"></script>
 </head>
 <body background="./images/main.jpg">
-	<div class = "menu">
-		<a href="./tests/">Test menu</a>
+	<div id="container">
+		<div id="logo">LostSpace</div>
+		<div class="menu">
+			<a href="tests/" class="button">Tests</a>
+			<a onclick="startScene(1);" class="button">Scene 1</a>
+			<a onclick="startScene(2);" class="button">Scene 2</a>
+		</div>
+		<footer>Create by CyberSpells <img src="images/logo.png" style="height: 24px; width: 24px;"></img></footer>
 	</div>
 </body>
 </html>

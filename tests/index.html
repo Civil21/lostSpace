@@ -3,10 +3,21 @@
 <head>
 	<title>Test Menu</title>
 	<link rel="stylesheet" type="text/css" href="../css/main.css" />
+	<script src="../js/three.js"></script>
+	<script src="../js/OBJLoader.js"></script>
+	<script src="../js/MTLLoader.js"></script>
+	<script src="../js/OrbitControls.js"></script>
+	<script src="../js/tests.js"></script>
 </head>
-<body>
-	<div class="menu">
-	<a href="../">Back</a>
-</div>
+<body background="../images/testroom.jpg">
+	<div id="container">
+		<div id="logo">LostSpace</div>
+		<div class="menu">
+			<a onclick="startTest(1);" class="button">Test 1</a>
+			<a onclick="startTest(2);" class="button">Test 2</a>
+			<a onclick="startTest(3);" class="button">Test 3</a>
+			<a href="../" class="button">Back</a>
+		</div>
+	</div>
 </body>
 </html>
