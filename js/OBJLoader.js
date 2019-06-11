@@ -36,16 +36,16 @@ THREE.OBJLoader = ( function () {
 
 				}
 
-				var previousMaterial = ( this.object && typeof this.object.currentMaterial === 'function' ? this.object.currentMaterial() : undefined );
+				var previousMaterial = ( this.object && typeof this.object.currentMaterial === "function" ? this.object.currentMaterial() : undefined );
 
-				if ( this.object && typeof this.object._finalize === 'function' ) {
+				if ( this.object && typeof this.object._finalize === "function" ) {
 
 					this.object._finalize( true );
 
 				}
 
 				this.object = {
-					name: name || '',
+					name: name || "",
 					fromDeclaration: ( fromDeclaration !== false ),
 
 					geometry: {
@@ -71,7 +71,7 @@ THREE.OBJLoader = ( function () {
 
 						var material = {
 							index: this.materials.length,
-							name: name || '',
+							name: name || "",
 							mtllib: ( Array.isArray( libraries ) && libraries.length > 0 ? libraries[ libraries.length - 1 ] : '' ),
 							smooth: ( previous !== undefined ? previous.smooth : this.smooth ),
 							groupStart: ( previous !== undefined ? previous.groupEnd : 0 ),
@@ -82,7 +82,7 @@ THREE.OBJLoader = ( function () {
 							clone: function ( index ) {
 
 								var cloned = {
-									index: ( typeof index === 'number' ? index : this.index ),
+									index: ( typeof index === "number" ? index : this.index ),
 									name: this.name,
 									mtllib: this.mtllib,
 									smooth: this.smooth,
@@ -145,7 +145,7 @@ THREE.OBJLoader = ( function () {
 						if ( end && this.materials.length === 0 ) {
 
 							this.materials.push( {
-								name: '',
+								name: "",
 								smooth: this.smooth
 							} );
 
