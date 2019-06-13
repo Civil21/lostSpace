@@ -30,9 +30,31 @@ function onKeyDown(event){
 	}
 }
 
+var menu = true;
+var game = {};
+function startTest(number){
+	menu= false
+	document.querySelector("#container").style.display="none";
+	document.body.background = "";
+	document.querySelector("#activMenu").style.display="block";
+	initScene();
+	if(RESOURCES_LOADED){
+			switch(number){
+			case 1:
+				test1();
+			break;
+			case 2:
+				test2();
+			break;
+			case 3:
+				test3();
+			break;
+		}
+	}
+	game.play = true;
+}
   //функція визначення координат мишки
 var mouse = new THREE.Vector2();
-
 function onMouseMove(event) {
   event.preventDefault();
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -70,144 +92,14 @@ function onHover() {
     	scene.remove(selector);
   }
 }
-
-function selectFloatPlan(group,locFloat){
-	console.log(group);
-		var arr = [];
-		group.forEach(function(plan){
-			if(plan.float==locFloat)arr.push(plan)
-		});
-		return arr;
-}
-var floats = [];
-var float = {
-	num: null,
-	station: null,
-}
-var arm = {
-	num: null,
-	station: null,
-}
-setInterval(function(){
-	if(false&& game.play){
-		console.log("I ALIVE");
-		if(redPlayer.silver>=redPlayer.minerCost()){
-			addMiner(redPlayer);
-			return ;
-		}
-		if(redPlayer.gold>=redPlayer.wariorCost()){
-			addWarior(redPlayer);
-			return ;
-		}
-	}
-},100);
-var floatNum = null
-
-function selectPlanToFloat(locFloat,plan){
-	
-	if(locFloat.num == null){
-		locFloat.num = floats.length;
-		locFloat.station = plan.station;
-		locFloat.position = {x:locFloat.station.position.x, y:locFloat.station.position.y+5,z:locFloat.station.position.z};
-	}
-	plan.float = locFloat.num;
-	plan.station = null;
-	floatPlanPosition(locFloat);
-}
-
-function floatPlans(locFloat){
-	var arr = [];
-
-	selectFloatPlan(miners,locFloat.num).forEach(function(miner){
-		arr.push(miner);
-	});
-	selectFloatPlan(wariors,locFloat.num).forEach(function(warior){
-		arr.push(warior);
-	});
-	return arr;
-}
-function floatPlanPosition(locFloat){
-	console.log("iTS WORK? 	")
-	var plans = floatPlans(locFloat)
-	//console.log(plans);
-	var cal = 1;
-	if(plans.length>1) cal++;
-	if(plans.length>4) cal++;
-	if(plans.length>9) cal++;
-	if(plans.length>16) cal++;
-	if(plans.length>25) cal++;
-	var x = 0,y=0;
-	var r = cal-1;
-	var c = (plans.length-plans.length%cal+cal)/cal-1;
-	//console.log("r:"+r+" c:"+c);
-	for(var i =0 ;i<plans.length;i++){
-		var plan = plans[i];
-
-		if(y>=cal){
-			y=0;
-			x++;
-			if(plans.length-x*cal<cal){
-				r=plans.length-x*cal;
-			}else{
-				r=cal;
-			}
-			//console.log("r:"+r+" c:"+c);
-		}
-		//console.log("position.x:"+(x*2)+" - "+(c));
-		//console.log("position.z:"+(y*2)+" - "+(r));
-		plan.target.set(locFloat.position.x+x*2-c/2,locFloat.position.y,locFloat.position.z+y*2-r/2);
-		//console.log(plan.target);
-		//console.log("i("+x+") j("+y+")");
-		y++;
-	}
-	
-}
-function removeFloat(locFloat){
-	locFloat.station.player = floatPlans(locFloat)[0].player;
-	floatPlans(locFloat).forEach(function(plan){
-		plan.station = locFloat.station;
-		plan.float = null;
-	});
-	//selectStationPlan().forEach();
-	
-}
-function targetFloat(locFloat, target){
-	locFloat.station = target;
-	var x,y,z,l,t;	
-	x = target.position.x - locFloat.position.x;
-    y = target.position.y+5 - locFloat.position.y;
-    z = target.position.z - locFloat.position.z;
-    l = Math.abs(Math.sqrt(x * x + y * y + z * z));
-    //console.log(t)
-    t = l / 1;
-    locFloat.run =  setInterval(function(){
-    	locFloat.position.x +=x/t;
-    	//locFloat.position.y +=y/t;
-    	locFloat.position.z +=z/t;
-    	floatPlanPosition(locFloat);
-    	console.log(Math.abs(z/t));
-    	if (Math.abs(locFloat.position.z - locFloat.station.position.z) <= Math.abs(z/t) &&
-        	Math.abs(locFloat.position.x - locFloat.station.position.x) <= Math.abs(x/t)) {
-        	clearInterval(locFloat.run);
-        	//console.log("finish float");
-        	removeFloat(locFloat);
-      	}
-    },100);
-   
-	floats.push(locFloat);
-	float = {
-	num: null,
-	station: null,
-	}
-}
 //var selectSpaceObject = null
 function onClick(event){
   	//console.log(event.button);
 	//console.log(event.which);
 	if(INTERSECTED){
 		//console.log(float.station != null && float.station != INTERSECTED && INTERSECTED.canSelect);
-		if(float.station != null && float.station != INTERSECTED && INTERSECTED.canSelect){
-			targetFloat(float, INTERSECTED);
+		if(floats[bluePlayer.float].station != null && floats[bluePlayer.float].station != INTERSECTED && INTERSECTED.canSelect){
+			targetFloat(floats[bluePlayer.float], INTERSECTED);
 			return;
 		}
 		if(INTERSECTED.player == bluePlayer){
@@ -216,8 +108,8 @@ function onClick(event){
 			switch(event.button){
 				case 0: 
 					if(INTERSECTED.miners().length>0){
-						selectPlanToFloat(float,INTERSECTED.miners()[0]);
-						console.log(floatPlans(float));
+						addPlanToFloat(INTERSECTED.miners()[0]);
+						//console.log(floatPlans(float));
 					}
 				break;
 				case 1:
@@ -225,7 +117,7 @@ function onClick(event){
 				break;
 				case 2:
 					if(INTERSECTED.wariors().length>0){
-						selectPlanToFloat(float,INTERSECTED.wariors()[0]);
+						addPlanToFloat(INTERSECTED.wariors()[0]);
 					}
 				break;
 			}
@@ -237,43 +129,6 @@ function onClick(event){
 	}
 	*/
 }
-
-var menu = true;
-var game = {};
-function startTest(number){
-	menu= false
-	document.querySelector("#container").style.display="none";
-	document.body.background = "";
-	console.log()
-	document.querySelector("#activMenu").style.display="block";
-	initScene();
-	game.play = true;
-	game.var =number;
-}
-
-function light(){
-	var ambientLight = new THREE.AmbientLight( 0xffffff, 0.6 );
-	scene.add( ambientLight );
-
-	var pointLight = new THREE.PointLight(0xffffff, 1);
-	pointLight.position.set(0, 1, 0);
-	scene.add(pointLight);
-	}
-
-function gridView(){
-	var geometry = new THREE.Geometry();
-	var material = new THREE.LineBasicMaterial(0x000000);
-	for(var i = -size; i<=size; i+=step){
-		geometry.vertices.push(new THREE.Vector3(-size,0,i));
-		geometry.vertices.push(new THREE.Vector3(size,0,i));
-
-		geometry.vertices.push(new THREE.Vector3(i,0,- size));
-		geometry.vertices.push(new THREE.Vector3(i,0,size));
-	}
-	var plan = new THREE.LineSegments(geometry,material,THREE.LinePieces);
-	scene.add(plan);
-}
-
 var loadingManager = null;
 var RESOURCES_LOADED = false;
 const modelsPath = "../models/";
@@ -418,15 +273,8 @@ var models = {
 		mesh: null
 	}
 };
-const size =30, step = 10;
-var meshes = {};
-var scene,control,camera,renderer;
-var selector;
-function initScene(){
-	scene = new THREE.Scene();
-	//camera = new THREE.OrthographicCamera(  window.innerWidth / - 20,  window.innerWidth / 20,  window.innerHeight / 20,  window.innerHeight / - 20, 0, 1000 );
-	camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
-	
+
+function beforeInite(){
 	loadingManager = new THREE.LoadingManager();
 	loadingManager.onProgress = function(item, loaded, total){
 		//console.log(item, loaded, total);
@@ -436,20 +284,6 @@ function initScene(){
 		RESOURCES_LOADED = true;
 		onResourceLoad();
 	};
-	scene.background = new THREE.TextureLoader(loadingManager).load('../images/maxresdefault.jpg');
-	gridView();
-	light();
-
-	selector = new THREE.Mesh( new THREE.TorusGeometry( 5, 0.3, 2, 32 ), new THREE.MeshBasicMaterial( { color: 0x000099 } ) );
-	selector.rotation.x =3.14/2;
-	raycaster = new THREE.Raycaster();
-	
-	renderer = new THREE.WebGLRenderer();
-	renderer.setSize(window.innerWidth,window.innerHeight);
-	document.body.appendChild(renderer.domElement);
-	control=new THREE.OrbitControls(camera,renderer.domElement);
-	camera.position.set(0,30,0);
-
 	for( var _key in models ){
 		(function(key){
 			if(models[key].mtl != null){
@@ -473,7 +307,6 @@ function initScene(){
 				});
 			});
 		}else{
-
 			var objLoader = new THREE.OBJLoader(loadingManager);
 			objLoader.load(modelsPath+models[key].obj, function ( mesh ) {
 				mesh.traverse(function(node){
@@ -492,7 +325,6 @@ function initScene(){
 							node.material.color.setHex(models[key].color);
 						}
 						}
-			
 					}
 				});
 				if(models[key].scale){
@@ -504,12 +336,280 @@ function initScene(){
 		}
 	})(_key);
 	}
+}
+
+var floats = [];
+setInterval(function(){
+	if(true&& game.play){
+		//console.log("I ALIVE");
+		if(redPlayer.silver>=redPlayer.minerCost()){
+			addMiner(redPlayer);
+			return ;
+		}
+		if(redPlayer.gold>=redPlayer.wariorCost()){
+			addWarior(redPlayer);
+			return ;
+		}
+	}
+	asteroids.forEach(function(asteroid){
+		//console.log("SEARCH asteroid");
+		if(asteroid.player == null || asteroid.player == redPlayer){
+			//console.log("find asteroid");
+			var arr = selectStationPlan(miners,redPlayer.planet);
+			//console.log(Math.min(arr.length,asteroid.workCount-selectStationPlan(miners,asteroid).length));
+			for(var i=0;i<Math.min(arr.length,asteroid.workCount-selectStationPlan(miners,asteroid).length);i++){
+				addPlanToFloat(selectStationPlan(miners,redPlayer.planet)[0]);
+			}
+		}
+		//console.log(asteroid.player == bluePlayer && strongStation(asteroid)<strongStation(redPlayer.planet));
+		if(asteroid.player == bluePlayer && strongStation(asteroid)<strongStation(redPlayer.planet)){
+			console.log("Find ENEMY");
+			//console.log(selectStationPlan(wariors,redPlayer.planet).length+selectStationPlan(miners,redPlayer.planet).length);
+			while(selectStationPlan(wariors,redPlayer.planet).length+selectStationPlan(miners,redPlayer.planet).length>0){
+				console.log(strongStation(asteroid)<strongFloat(floats[redPlayer.float]));
+				if(strongStation(asteroid)<strongFloat(floats[redPlayer.float])){
+					break;
+				}
+				console.log(selectStationPlan(wariors,redPlayer.planet.length)>0);
+				if(selectStationPlan(wariors,redPlayer.planet).length>0){
+					addPlanToFloat(selectStationPlan(wariors,redPlayer.planet)[0]);
+					continue;
+				}
+				console.log(selectStationPlan(miners,redPlayer.planet.length)>0);
+				if(selectStationPlan(miners,redPlayer.planet).length>0){
+					addPlanToFloat(selectStationPlan(miners,redPlayer.planet)[0]);
+					continue;
+				}
+			}
+		}
+		if(floatPlans(floats[redPlayer.float]).length>0){
+			//console.log("go to asteroid");
+			targetFloat(floats[redPlayer.float],asteroid);
+			//console.log(arm.station);
+			//return;
+		}
+	});
+},100);
+
+function strongFloat(locFloat){
+	return selectFloatPlan(miners,locFloat)+selectFloatPlan(wariors,locFloat)*2;
+}
+
+function selectFloatPlan(group,locFloat){
+	//console.log(group);
+	var arr = [];
+	group.forEach(function(plan){
+		if(plan.float==locFloat)arr.push(plan)
+	});
+	return arr;
+}
+//var floatNum = null
+
+function addPlanToFloat(plan){
+
+	locFloat = floats[plan.player.float]
+	if(locFloat.station == null){
+		locFloat.station = plan.station;
+		locFloat.position = {x:locFloat.station.position.x, y:locFloat.station.position.y+5,z:locFloat.station.position.z};
+	}
+	plan.float = locFloat.num;
+	plan.station = null;
+	floatPlanPosition(locFloat);
+}
+
+function floatPlans(locFloat){
+	if(locFloat){
+		var arr = [];
+		selectFloatPlan(miners,locFloat.num).forEach(function(miner){
+			arr.push(miner);
+		});
+		selectFloatPlan(wariors,locFloat.num).forEach(function(warior){
+			arr.push(warior);
+		});
+		return arr;
+	}else{
+		console.log("NotFound float"); 
+	}
+}
+function floatPlanPosition(locFloat){
+	//console.log("iTS WORK? 	")
+	var plans = floatPlans(locFloat)
+	//console.log(plans);
+	var cal = 1;
+	if(plans.length>1) cal++;
+	if(plans.length>4) cal++;
+	if(plans.length>9) cal++;
+	if(plans.length>16) cal++;
+	if(plans.length>25) cal++;
+	var x = 0,y=0;
+	var r = cal-1;
+	var c = (plans.length-plans.length%cal+cal)/cal-1;
+	//console.log("r:"+r+" c:"+c);
+	for(var i =0 ;i<plans.length;i++){
+		var plan = plans[i];
+
+		if(y>=cal){
+			y=0;
+			x++;
+			if(plans.length-x*cal<cal){
+				r=plans.length-x*cal;
+			}else{
+				r=cal;
+			}
+			//console.log("r:"+r+" c:"+c);
+		}
+		//console.log("position.x:"+(x*2)+" - "+(c));
+		//console.log("position.z:"+(y*2)+" - "+(r));
+		plan.target.set(locFloat.position.x+x*2-c/2,locFloat.position.y,locFloat.position.z+y*2-r/2);
+		//console.log(plan.target);
+		//console.log("i("+x+") j("+y+")");
+		y++;
+	}
+	
+}
+function deletePlanToGroup(group,planGroup){
+	group.slice(group.indexOf(planGroup[0]),1);
+	planGroup[0].destroy();
+	planGroup.shift();
+}
+
+function removeFloat(locFloat){
+	if(locFloat.station.player ==floatPlans(locFloat)[0].player){
+		//console.log("Its my station");
+	}else{
+		var ms1 =selectStationPlan(miners,locFloat.station);
+		var ms2 =selectFloatPlan(miners,locFloat.num);
+		for(var i=0;i<Math.min(ms1.length,ms2.length);){
+			deletePlanToGroup(miners,ms1);
+			deletePlanToGroup(miners,ms2);
+		}
+		var ws1 =selectStationPlan(wariors,locFloat.station);
+		var ws2 =selectFloatPlan(wariors,locFloat.num);
+		//console.log(Math.min(ws1.length,ws2.length));
+		for(var i=0;i<Math.min(ws1.length,ws2.length);){
+			deletePlanToGroup(wariors,ws1);
+			deletePlanToGroup(wariors,ws2);
+		}
+		if(ms1.length>0 && ws2.length>0){
+			for(var i=0;i<Math.min(ms1.length,ws2.length);){
+				if(ms1.length==1){
+					//console.log("Delete miner");
+					deletePlanToGroup(miners,ms1);
+				}else{
+					deletePlanToGroup(miners,ms1);
+					deletePlanToGroup(miners,ms1);
+					deletePlanToGroup(wariors,ws2);
+				}
+			}
+		}
+		//console.log(ms2.length>0 && ws1.length>0);
+		if(ms2.length>0 && ws1.length>0){
+			for(var i=0;i<Math.min(ms2.length,ws1.length);){
+				if(ms2.length==1){
+					deletePlanToGroup(miners,ms2);
+				}else{
+					deletePlanToGroup(miners,ms2);
+					deletePlanToGroup(miners,ms2);
+					deletePlanToGroup(wariors,ws1);
+				}
+			}
+		}
+	}
+	console.log("park "+floatPlans(locFloat).length);
+	if(floatPlans(locFloat).length>0){
+		locFloat.station.player =floatPlans(locFloat)[0].player
+		floatPlans(locFloat).forEach(function(plan){
+			plan.station = locFloat.station;
+			plan.float = null;
+		});
+	}
+	//selectStationPlan().forEach();
+	
+}
+function targetFloat(locFloat, target){
+	var newFloat = new Object();
+	newFloat.num = floats.length;
+	newFloat.station = null;
+	locFloat.station.player.float = newFloat.num;
+	floats.push(newFloat);
+
+	locFloat.station = target;
+	var x,y,z,l,t;	
+	x = target.position.x - locFloat.position.x;
+    y = target.position.y+5 - locFloat.position.y;
+    z = target.position.z - locFloat.position.z;
+    l = Math.abs(Math.sqrt(x * x + y * y + z * z));
+    //console.log(t)
+    t = l / 1;
+    locFloat.run =  setInterval(function(){
+    	locFloat.position.x +=x/t;
+    	//locFloat.position.y +=y/t;
+    	locFloat.position.z +=z/t;
+    	floatPlanPosition(locFloat);
+    	//console.log(Math.abs(z/t));
+    	if (Math.abs(locFloat.position.z - locFloat.station.position.z) <= Math.abs(z/t) &&
+        	Math.abs(locFloat.position.x - locFloat.station.position.x) <= Math.abs(x/t)) {
+        	clearInterval(locFloat.run);
+        	//console.log("finish float");
+        	removeFloat(locFloat);
+      	}
+    },100);
+
+	//floats.push(locFloat);
+}
+
+
+function light(){
+	var ambientLight = new THREE.AmbientLight( 0xffffff, 0.6 );
+	scene.add( ambientLight );
+
+	var pointLight = new THREE.PointLight(0xffffff, 1);
+	pointLight.position.set(0, 1, 0);
+	scene.add(pointLight);
+	}
+
+function gridView(){
+	var geometry = new THREE.Geometry();
+	var material = new THREE.LineBasicMaterial(0x000000);
+	for(var i = -size; i<=size; i+=step){
+		geometry.vertices.push(new THREE.Vector3(-size,0,i));
+		geometry.vertices.push(new THREE.Vector3(size,0,i));
+
+		geometry.vertices.push(new THREE.Vector3(i,0,- size));
+		geometry.vertices.push(new THREE.Vector3(i,0,size));
+	}
+	var plan = new THREE.LineSegments(geometry,material,THREE.LinePieces);
+	scene.add(plan);
+}
+
+
+const size =30, step = 10;
+var scene,control,camera,renderer;
+var selector;
+function initScene(){
+	scene = new THREE.Scene();
+	//camera = new THREE.OrthographicCamera(  window.innerWidth / - 20,  window.innerWidth / 20,  window.innerHeight / 20,  window.innerHeight / - 20, 0, 1000 );
+	camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
+	
+	scene.background = new THREE.TextureLoader().load('../images/maxresdefault.jpg');
+	gridView();
+	light();
+
+	selector = new THREE.Mesh( new THREE.TorusGeometry( 5, 0.3, 2, 32 ), new THREE.MeshBasicMaterial( { color: 0x000099 } ) );
+	selector.rotation.x =3.14/2;
+	raycaster = new THREE.Raycaster();
+	
+	renderer = new THREE.WebGLRenderer();
+	renderer.setSize(window.innerWidth,window.innerHeight);
+	document.body.appendChild(renderer.domElement);
+	control=new THREE.OrbitControls(camera,renderer.domElement);
+	camera.position.set(0,30,0);
 
 	window.addEventListener('resize', onWindowResize, false);
 	window.addEventListener('keydown', onKeyDown,false);
 	window.addEventListener('mousemove', onMouseMove, false);
 	document.onmousedown =onClick
-	
+	//console.log(spaceObject());
 	animate();
 }
 
@@ -536,7 +636,7 @@ function addMiner(player){
 		addPlan(plan,player.planet);
 		miners.push(plan);
 	}else{
-		console.log('NEED MANY SILVER')
+		//console.log('NEED MANY SILVER')
 	}
 }
 function addWarior(player){
@@ -555,53 +655,65 @@ function addWarior(player){
 		}
 		plan.player = player;
 		addPlan(plan,player.planet);
-		wariors.push(plan)
+		wariors.push(plan);
 	}else{
-		console.log('NEED MANY GOOLD')
+		//console.log('NEED MANY GOOLD')
 	}
 }
 function addPlan(plan, planet){
-		//console.log(planet.position);
-		plan.position.set(planet.position.x,planet.position.y+5,planet.position.z);
-		plan.target = {x:0, y:0,z:0};
-		plan.target.set = function(x,y,z){
-			plan.target.x = x;
-			plan.target.y = y;
-			plan.target.z = z;
-		}
-		plan.run = setInterval(function() {
-			var position = {
-				x:plan.position.x,
-				y:plan.position.y,
-				z:plan.position.z
-			};
-			//plan.lookAt(plan.position);
-			if(Math.abs(position.x-plan.target.x)>0.1)
-				if(position.x-plan.target.x<0){plan.position.x+=0.05}else{plan.position.x-=0.05}
-			if(Math.abs(plan.position.y-plan.target.y)>0.1)
-				if(position.y-plan.target.y<0){plan.position.y+=0.05}else{plan.position.y-=0.05}
-			if(Math.abs(position.z-plan.target.z)>0.1)		
-				if(position.z-plan.target.z<0){plan.position.z+=0.05}else{plan.position.z-=0.05}
-			//plan.lookAt(position.x-(plan.target.x-position.x)*10,position.y,position.z-(plan.target.z-position.z)*10);
-			//console.log(position.x+plan.target.x*1000,position.y+plan.target.y*100,position.z+plan.target.z*1000);
-			//plan.position.set(position.x,position.y,position.z);
-			plan.lookAt(position.x,position.y,position.z);
-
-      }, 1);
-		plan.station = planet;
-		//console.log(plan.position);
-		//plans.push(plan);
-		scene.add(plan)
+	//console.log(planet.position);
+	plan.position.set(planet.position.x,planet.position.y+5,planet.position.z);
+	plan.target = {x:0, y:0,z:0};
+	plan.target.set = function(x,y,z){
+		plan.target.x = x;
+		plan.target.y = y;
+		plan.target.z = z;
+	}
+	plan.run = setInterval(function() {
+		var position = {
+			x:plan.position.x,
+			y:plan.position.y,
+			z:plan.position.z
+		};
+		//plan.lookAt(plan.position);
+		if(Math.abs(position.x-plan.target.x)>0.1)
+			if(position.x-plan.target.x<0){plan.position.x+=0.05}else{plan.position.x-=0.05}
+		if(Math.abs(plan.position.y-plan.target.y)>0.1)
+			if(position.y-plan.target.y<0){plan.position.y+=0.05}else{plan.position.y-=0.05}
+		if(Math.abs(position.z-plan.target.z)>0.1)		
+			if(position.z-plan.target.z<0){plan.position.z+=0.05}else{plan.position.z-=0.05}
+		//plan.lookAt(position.x-(plan.target.x-position.x)*10,position.y,position.z-(plan.target.z-position.z)*10);
+		//console.log(position.x+plan.target.x*1000,position.y+plan.target.y*100,position.z+plan.target.z*1000);
+		//plan.position.set(position.x,position.y,position.z);
+		plan.lookAt(position.x,position.y,position.z);
+    }, 1);
+    plan.player = planet.player;
+	plan.station = planet;
+	plan.destroy = function(){
+		plan.float = null;
+		plan.station = null;
+		plan.player = null;
+		scene.remove(plan);
+	}
+	//console.log(plan.position);
+	//plans.push(plan);
+	scene.add(plan)
 }
 function spaceObject(){
 	var arr = [];
 	asteroids.forEach(function(asteroid){
 		arr.push(asteroid);
 	});
-	arr.push(bluePlayer.planet);
-	arr.push(redPlayer.planet);
+	if(bluePlayer.planet)arr.push(bluePlayer.planet);
+	if(redPlayer.planet)arr.push(redPlayer.planet);
 	return arr;
 } 
+
+function strongStation (station){
+	return selectStationPlan(miners,station).length+selectStationPlan(wariors,station).length*2
+
+}
+
 var asteroids = [];
 
 function selectStationPlan(group,station){
@@ -690,14 +802,17 @@ function addAsteroid(material,speed,size,x,y){
 }
 
 function addPlanet(command,x,y){
+	//console.log("add planet start");
 	var planet;
 	switch(command){
 		case 0:
+			//console.log(models.earth.mesh);
 			planet  = models.earth.mesh.clone();
 			planet.player = bluePlayer;
 			bluePlayer.planet = planet;
 		break;
 		case 1: 
+			//console.log(models.mars.mesh);
 			planet = models.mars.mesh.clone();
 			planet.player = redPlayer;
 			redPlayer.planet = planet;
@@ -722,17 +837,7 @@ function onWindowResize() {
 
 function onResourceLoad(){
 	if(RESOURCES_LOADED){
-		switch(game.var){
-			case 1:
-				test1();
-			break;
-			case 2:
-				test2();
-			break;
-			case 3:
-				test3();
-			break;
-		}
+
 	}	
 }
 function selectPlan(group,player){
@@ -751,7 +856,9 @@ var redPlayer={
 	gold: 8,
 	wariors: function(){return selectPlan(wariors,redPlayer);},
 	wariorCost: function(){return 3+redPlayer.wariors().length*3},
+	float: 0,
 };
+floats.push({num:0,station:null});
 var bluePlayer={
 	name: "blue",
 	silver: 100,
@@ -760,8 +867,10 @@ var bluePlayer={
 	gold: 100,
 	wariors: function(){return selectPlan(wariors,bluePlayer);},
 	wariorCost: function(){return 3+bluePlayer.wariors().length*3},
+	float: 1,
 };
-
+floats.push({num:1,station:null});
+var meshes = {};
 function test1(){
 	
 	meshes["w1"] = models.wariorRed.mesh.clone();
@@ -780,7 +889,6 @@ function test1(){
 	addPlanet(0,2,4);
 	addPlanet(1,2,3);
 	
-	
 	addAsteroid(0,0,0,0,0);
 	addAsteroid(0,0,1,0,1);
 	addAsteroid(0,0,2,0,2);
@@ -793,7 +901,6 @@ function test1(){
 	addAsteroid(1,1,0,3,0);
 	addAsteroid(1,1,1,3,1);
 	addAsteroid(1,1,2,3,2);
-	
 }
 
 function test2(){	
@@ -802,11 +909,12 @@ function test2(){
 	//addWarior(bluePlayer);
 	addAsteroid(1,1,2,3,0);
 	addAsteroid(1,1,2,2,5);
-
 }
 
 function test3(){
-		addAsteroid(0,0,2,0,2);
+	addPlanet(0,2,4);
+	addPlanet(1,2,3);
+	//addAsteroid(0,0,2,0,2);
 	//console.log(asteroids[0]);
 }
 var angle = 0;
@@ -814,13 +922,14 @@ function animate(){
 	requestAnimationFrame(animate);
 	
 	if( RESOURCES_LOADED == false ){
-		
 		return;
 	}
 
 	if(game.play){
 		document.getElementById("silverCount").innerText = bluePlayer.silver;
 		document.getElementById("goldCount").innerText = bluePlayer.gold;
+		document.getElementById("minerCost").innerText = bluePlayer.minerCost();
+		document.getElementById("wariorCost").innerText = bluePlayer.wariorCost();
 	}
 
 	asteroids.forEach(function(asteroid){
@@ -829,7 +938,7 @@ function animate(){
 	});
 
 	spaceObject().forEach(function(station){
-		//console.log(station.position);
+		//console.log(station);
 		for (var i = 0; i < station.wariors().length; i++) {
 			var warior = station.wariors()[i];
       		var x = (2 * 3.14 / station.wariors().length) * (i + 1);
@@ -843,7 +952,6 @@ function animate(){
     	}
 	});
 
-	
 	camera.lookAt(scene.position);
  	camera.updateMatrixWorld();
   	onHover();
