@@ -1,4 +1,5 @@
 function onKeyDown(event){
+	//console.log(event.which);
 	switch(event.which){
 		case 27:
 		if(menu){
@@ -11,6 +12,21 @@ function onKeyDown(event){
 			document.querySelector("#container").style.display="";
 		}			
 		break;
+		/*
+		case 87:
+			console.log(camera);
+			camera.position.x+=0.1;
+		break;
+		case 83:
+			camera.position.x-=0.1;
+		break;
+		case 68:
+			camera.position.z+=0.1;
+		break;
+		case 65:
+			camera.position.z-=0.1;
+		break;
+		*/
 	}
 }
 
@@ -267,7 +283,7 @@ var models = {
 		obj:"planet.obj",
 		mtl: null,
 		mesh: null,
-		texture: "earthmap.jpg",
+		texture: "earth.jpg",
 		scale: 1
 	},
 	mars:{
@@ -408,6 +424,7 @@ var scene,control,camera,renderer;
 var selector;
 function initScene(){
 	scene = new THREE.Scene();
+	//camera = new THREE.OrthographicCamera(  window.innerWidth / - 20,  window.innerWidth / 20,  window.innerHeight / 20,  window.innerHeight / - 20, 0, 1000 );
 	camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
 	
 	loadingManager = new THREE.LoadingManager();
@@ -558,16 +575,17 @@ function addPlan(plan, planet){
 				y:plan.position.y,
 				z:plan.position.z
 			};
-
+			//plan.lookAt(plan.position);
 			if(Math.abs(position.x-plan.target.x)>0.1)
-				if(position.x-plan.target.x<0){position.x+=0.05}else{position.x-=0.05}
+				if(position.x-plan.target.x<0){plan.position.x+=0.05}else{plan.position.x-=0.05}
 			if(Math.abs(plan.position.y-plan.target.y)>0.1)
-				if(position.y-plan.target.y<0){position.y+=0.05}else{position.y-=0.05}
+				if(position.y-plan.target.y<0){plan.position.y+=0.05}else{plan.position.y-=0.05}
 			if(Math.abs(position.z-plan.target.z)>0.1)		
-				if(position.z-plan.target.z<0){position.z+=0.05}else{position.z-=0.05}
-			plan.lookAt(position.x+plan.target.x*1000,position.y+plan.target.y*100,position.z+plan.target.z*1000);
+				if(position.z-plan.target.z<0){plan.position.z+=0.05}else{plan.position.z-=0.05}
+			//plan.lookAt(position.x-(plan.target.x-position.x)*10,position.y,position.z-(plan.target.z-position.z)*10);
 			//console.log(position.x+plan.target.x*1000,position.y+plan.target.y*100,position.z+plan.target.z*1000);
-			plan.position.set(position.x,position.y,position.z);
+			//plan.position.set(position.x,position.y,position.z);
+			plan.lookAt(position.x,position.y,position.z);
 
       }, 1);
 		plan.station = planet;
