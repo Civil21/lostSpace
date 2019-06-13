@@ -31,22 +31,16 @@ function onHover() {
   	var intersects = raycaster.intersectObjects(scene.children,true );
   	if (intersects.length > 0) {
     	// знайдено обєкт в зоні наведення мишки
-    	//console.log("intersect object")
     	if (INTERSECTED != intersects[0].object.parent) {
       		//зміна об'єкту наведення
       		if(intersects[0].object.parent.canSelect){
-      			//console.log("INTERSECTED");
       			if (INTERSECTED) {
-      				//INTERSECTED.children[0].material.color.setHex( INTERSECTED.currentHex );
       			}
       			INTERSECTED = intersects[0].object.parent;
       			scene.add(selector);
       			selector.position.set(INTERSECTED.position.x,INTERSECTED.position.y,INTERSECTED.position.z);
-      			//INTERSECTED.currentHex = INTERSECTED.children[0].material.color.getHex();
-				//INTERSECTED.children[0].material.color.setHex( 0x000000 );
 			}else{
 				if (INTERSECTED) {
-      				//INTERSECTED.children[0].material.color.setHex( INTERSECTED.currentHex );
     			}
     			INTERSECTED = null;
     			scene.remove(selector);
@@ -54,17 +48,18 @@ function onHover() {
     	}
   	} else {
     	if (INTERSECTED) {
-      		//INTERSECTED.children[0].material.color.setHex( INTERSECTED.currentHex );
+
     	}
     	INTERSECTED = null;
     	scene.remove(selector);
   }
 }
 
-function selectFloatPlan(group,float){
+function selectFloatPlan(group,locFloat){
+	console.log(group);
 		var arr = [];
 		group.forEach(function(plan){
-			if(plan.float==float)arr.push(plan)
+			if(plan.float==locFloat)arr.push(plan)
 		});
 		return arr;
 }
@@ -73,59 +68,151 @@ var float = {
 	num: null,
 	station: null,
 }
+var arm = {
+	num: null,
+	station: null,
+}
+setInterval(function(){
+	if(false&& game.play){
+		console.log("I ALIVE");
+		if(redPlayer.silver>=redPlayer.minerCost()){
+			addMiner(redPlayer);
+			return ;
+		}
+		if(redPlayer.gold>=redPlayer.wariorCost()){
+			addWarior(redPlayer);
+			return ;
+		}
+	}
+},100);
 var floatNum = null
 
-function selectPlanToFloat(plan){
+function selectPlanToFloat(locFloat,plan){
 	
-	if(float.num == null){
-		float.num = floats.length;
-		float.station = plan.station;
+	if(locFloat.num == null){
+		locFloat.num = floats.length;
+		locFloat.station = plan.station;
+		locFloat.position = {x:locFloat.station.position.x, y:locFloat.station.position.y+5,z:locFloat.station.position.z};
 	}
-	plan.target.set(float.station.position.x,float.station.position.y+5,float.station.position.z);
-	plan.float = float.num;
+	plan.float = locFloat.num;
 	plan.station = null;
+	floatPlanPosition(locFloat);
 }
-function removeFloat(float){
-	selectFloatPlan(miners,float.num).forEach(function(miner){
-		miner.station = float.station;
-		miner.float = null;
+
+function floatPlans(locFloat){
+	var arr = [];
+
+	selectFloatPlan(miners,locFloat.num).forEach(function(miner){
+		arr.push(miner);
 	});
-	selectFloatPlan(wariors,float.num).forEach(function(warior){
-		warior.station = float.station;
-		warior.float = null;
+	selectFloatPlan(wariors,locFloat.num).forEach(function(warior){
+		arr.push(warior);
 	});
+	return arr;
 }
-function targetFloat(float, target){
+function floatPlanPosition(locFloat){
+	console.log("iTS WORK? 	")
+	var plans = floatPlans(locFloat)
+	//console.log(plans);
+	var cal = 1;
+	if(plans.length>1) cal++;
+	if(plans.length>4) cal++;
+	if(plans.length>9) cal++;
+	if(plans.length>16) cal++;
+	if(plans.length>25) cal++;
+	var x = 0,y=0;
+	var r = cal-1;
+	var c = (plans.length-plans.length%cal+cal)/cal-1;
+	//console.log("r:"+r+" c:"+c);
+	for(var i =0 ;i<plans.length;i++){
+		var plan = plans[i];
+
+		if(y>=cal){
+			y=0;
+			x++;
+			if(plans.length-x*cal<cal){
+				r=plans.length-x*cal;
+			}else{
+				r=cal;
+			}
+			//console.log("r:"+r+" c:"+c);
+		}
+		//console.log("position.x:"+(x*2)+" - "+(c));
+		//console.log("position.z:"+(y*2)+" - "+(r));
+		plan.target.set(locFloat.position.x+x*2-c/2,locFloat.position.y,locFloat.position.z+y*2-r/2);
+		//console.log(plan.target);
+		//console.log("i("+x+") j("+y+")");
+		y++;
+	}
 	
 }
-var selectSpaceObject = null
+function removeFloat(locFloat){
+	locFloat.station.player = floatPlans(locFloat)[0].player;
+	floatPlans(locFloat).forEach(function(plan){
+		plan.station = locFloat.station;
+		plan.float = null;
+	});
+	//selectStationPlan().forEach();
+	
+}
+function targetFloat(locFloat, target){
+	locFloat.station = target;
+	var x,y,z,l,t;	
+	x = target.position.x - locFloat.position.x;
+    y = target.position.y+5 - locFloat.position.y;
+    z = target.position.z - locFloat.position.z;
+    l = Math.abs(Math.sqrt(x * x + y * y + z * z));
+    //console.log(t)
+    t = l / 1;
+    locFloat.run =  setInterval(function(){
+    	locFloat.position.x +=x/t;
+    	//locFloat.position.y +=y/t;
+    	locFloat.position.z +=z/t;
+    	floatPlanPosition(locFloat);
+    	console.log(Math.abs(z/t));
+    	if (Math.abs(locFloat.position.z - locFloat.station.position.z) <= Math.abs(z/t) &&
+        	Math.abs(locFloat.position.x - locFloat.station.position.x) <= Math.abs(x/t)) {
+        	clearInterval(locFloat.run);
+        	//console.log("finish float");
+        	removeFloat(locFloat);
+      	}
+    },100);
+   
+	floats.push(locFloat);
+	float = {
+	num: null,
+	station: null,
+	}
+}
+//var selectSpaceObject = null
 function onClick(event){
   	//console.log(event.button);
 	//console.log(event.which);
-	if(INTERSECTED && INTERSECTED.player == bluePlayer){
-		//console.log(INTERSECTED.player);
-		if(float.station &&float.station != INTERSECTED){
-			removeFloat(float);
+	if(INTERSECTED){
+		//console.log(float.station != null && float.station != INTERSECTED && INTERSECTED.canSelect);
+		if(float.station != null && float.station != INTERSECTED && INTERSECTED.canSelect){
+			targetFloat(float, INTERSECTED);
+			return;
 		}
+		if(INTERSECTED.player == bluePlayer){
 		//console.log(float);
-		switch(event.button){
-			case 0: 
-				if(INTERSECTED.miners().length>0){
-					selectPlanToFloat(INTERSECTED.miners()[0]);
-				}
-			break;
-			case 1:
-				console.log(selectFloatPlan(wariors,float.num));
-				var w = selectFloatPlan(wariors,float.num);
-				console.log(selectFloatPlan(wariors,float.num)[0].station);
-				removeFloat(float);
-				console.log(w.station);
-			break;
-			case 2:
-				if(INTERSECTED.wariors().length>0){
-					selectPlanToFloat(INTERSECTED.wariors()[0]);
-				}
-			break;
+		//selectSpaceObject = INTERSECTED
+			switch(event.button){
+				case 0: 
+					if(INTERSECTED.miners().length>0){
+						selectPlanToFloat(float,INTERSECTED.miners()[0]);
+						console.log(floatPlans(float));
+					}
+				break;
+				case 1:
+					removeFloat(float);
+				break;
+				case 2:
+					if(INTERSECTED.wariors().length>0){
+						selectPlanToFloat(float,INTERSECTED.wariors()[0]);
+					}
+				break;
+			}
 		}
 	}
 	/*
@@ -325,14 +412,14 @@ function initScene(){
 	
 	loadingManager = new THREE.LoadingManager();
 	loadingManager.onProgress = function(item, loaded, total){
-		console.log(item, loaded, total);
+		//console.log(item, loaded, total);
 	};
 	loadingManager.onLoad = function(){
 		console.log("loaded all resources");
 		RESOURCES_LOADED = true;
 		onResourceLoad();
 	};
-
+	scene.background = new THREE.TextureLoader(loadingManager).load('../images/maxresdefault.jpg');
 	gridView();
 	light();
 
@@ -436,8 +523,8 @@ function addMiner(player){
 	}
 }
 function addWarior(player){
-	console.log(player.gold);
-	console.log(player.wariorCost());
+	//console.log(player.gold);
+	//console.log(player.wariorCost());
 	if(player.gold>=player.wariorCost()){
 		player.gold -= player.wariorCost();
 		var plan;
@@ -466,12 +553,21 @@ function addPlan(plan, planet){
 			plan.target.z = z;
 		}
 		plan.run = setInterval(function() {
-			if(Math.abs(plan.position.x-plan.target.x)>0.1)
-				if(plan.position.x-plan.target.x<0){plan.position.x+=0.05}else{plan.position.x-=0.05}
+			var position = {
+				x:plan.position.x,
+				y:plan.position.y,
+				z:plan.position.z
+			};
+
+			if(Math.abs(position.x-plan.target.x)>0.1)
+				if(position.x-plan.target.x<0){position.x+=0.05}else{position.x-=0.05}
 			if(Math.abs(plan.position.y-plan.target.y)>0.1)
-				if(plan.position.y-plan.target.y<0){plan.position.y+=0.05}else{plan.position.y-=0.05}
-			if(Math.abs(plan.position.z-plan.target.z)>0.1)		
-				if(plan.position.z-plan.target.z<0){plan.position.z+=0.05}else{plan.position.z-=0.05}
+				if(position.y-plan.target.y<0){position.y+=0.05}else{position.y-=0.05}
+			if(Math.abs(position.z-plan.target.z)>0.1)		
+				if(position.z-plan.target.z<0){position.z+=0.05}else{position.z-=0.05}
+			plan.lookAt(position.x+plan.target.x*1000,position.y+plan.target.y*100,position.z+plan.target.z*1000);
+			//console.log(position.x+plan.target.x*1000,position.y+plan.target.y*100,position.z+plan.target.z*1000);
+			plan.position.set(position.x,position.y,position.z);
 
       }, 1);
 		plan.station = planet;
@@ -547,9 +643,11 @@ function addAsteroid(material,speed,size,x,y){
 	setPosition(asteroid,x,y);
 	asteroid.rotation.set(Math.random()*360,Math.random()*360,Math.random()*360);
 	setInterval(function() {
+		//console.log("SEARCH MINER");
 		if(asteroid.player && game.play){
 			switch(material){
 				case 0: 
+					//console.log("SEARCH GOLD MINER");
 					if(asteroid.miners().length<=asteroid.workCount){
 						asteroid.player.gold += asteroid.miners().length*(asteroid.speed+1)
 					}else{
@@ -558,6 +656,7 @@ function addAsteroid(material,speed,size,x,y){
 					
 					break;
 				case 1:
+					//console.log("SEARCH SILVER MINER");
 					if(asteroid.miners().length<=asteroid.workCount){
 						asteroid.player.silver += asteroid.miners().length*(asteroid.speed+1)
 					}else{
@@ -583,9 +682,9 @@ function addPlanet(command,x,y){
 		case 1: 
 			planet = models.mars.mesh.clone();
 			planet.player = redPlayer;
+			redPlayer.planet = planet;
 		break;
 	}
-	planet.player.planet = planet;
 	planet.wariors = function(){return selectStationPlan(wariors,planet)};
 	planet.miners = function(){return selectStationPlan(miners,planet)};
 	planet.isStation = true;
@@ -637,10 +736,10 @@ var redPlayer={
 };
 var bluePlayer={
 	name: "blue",
-	silver: 0,
+	silver: 100,
 	miners: function(){return selectPlan(miners,bluePlayer);},
 	minerCost: function(){return bluePlayer.miners().length*2},
-	gold: 40,
+	gold: 100,
 	wariors: function(){return selectPlan(wariors,bluePlayer);},
 	wariorCost: function(){return 3+bluePlayer.wariors().length*3},
 };
@@ -680,16 +779,17 @@ function test1(){
 }
 
 function test2(){	
-	addPlanet(1,4,4);
+	addPlanet(1,3,2);
 	addPlanet(0,3,3);
 	//addWarior(bluePlayer);
-
+	addAsteroid(1,1,2,3,0);
+	addAsteroid(1,1,2,2,5);
 
 }
 
 function test3(){
 		addAsteroid(0,0,2,0,2);
-	console.log(asteroids[0]);
+	//console.log(asteroids[0]);
 }
 var angle = 0;
 function animate(){
@@ -711,18 +811,17 @@ function animate(){
 	});
 
 	spaceObject().forEach(function(station){
-
+		//console.log(station.position);
 		for (var i = 0; i < station.wariors().length; i++) {
 			var warior = station.wariors()[i];
       		var x = (2 * 3.14 / station.wariors().length) * (i + 1);
       		warior.target.set(station.position.x+5 * Math.cos(x+(angle/360)*2*3.14), 0, station.position.z+5 * Math.sin(x+(angle/360)*2*3.14));
-      		//warior.rotation.y+=x;
     	}
 	
 		for (var i = 0; i < station.miners().length; i++) {
 			var miner = station.miners()[i];
-      		var x = (2 * 3.14 / station.miners().length) * (i + 1)+(angle/360)*2*3.14/2;
-      		miner.target.set(station.position.x+4 * Math.cos(x), 0, station.position.z+4 * Math.sin(x));
+      		var x = (2 * 3.14 / station.miners().length) * (i + 1);
+      		miner.target.set(station.position.x+4 * Math.cos(x+(angle/360)*2*3.14),0, station.position.z+4 * Math.sin(x+(angle/360)*2*3.14));
     	}
 	});
 
@@ -734,5 +833,6 @@ function animate(){
 
    //перевірка наведення
 	angle+=1;
+	if(angle>=360)angle =0;
 	renderer.render(scene,camera);
 }
