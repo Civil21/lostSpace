@@ -1,5 +1,7 @@
 body{
 	color: white;
+	cursor: url('../images/cursor_pointer3D.png'), auto;	
+	margin: 0;
 }
 
 footer{
@@ -23,7 +25,10 @@ canvas{
 
 .menu{
 	
-	background-color: rgba(0, 0, 0, 0.5);
+	background-image:  url(../images/glassPanel.png);
+	background-position: center;
+  	background-repeat: no-repeat;
+	background-size: cover;
 	margin: 50px auto;
 	display: block;
 	text-align:center;
@@ -41,6 +46,42 @@ canvas{
 .menu a{
 	
 }
+
+#activMenu{
+	display: none;
+	position: fixed;
+  	width:150px;
+  	height:150px;
+  	top:0;
+  	right: 0;
+  	background-image: url(../images/metalPanel_blue.png);
+  		background-position: center;
+  	background-repeat: no-repeat;
+	background-size: cover;
+  	color: #ffffff;
+  	//opacity: 0.7;
+  	z-index: 1000;
+}
+.info{
+	display: inline-flex;
+	font-size:  22px;
+	color: #ffffff;
+  	text-align: center;
+  	padding: 10px 0px 0px 10px;
+}
+
+.info img{
+	height: 32px;
+	width: 32px;
+}
+.info button{
+	background-image: url(../images/dotBlue.png);
+	height: 28px;
+	width: 28px;
+	  		background-position: center;
+  	background-repeat: no-repeat;
+	background-size: cover;
+}
 #logo{
 	margin-top: 20px;
 	display: block;
@@ -49,6 +90,7 @@ canvas{
 	color: white;
 }
 .button{
+	cursor: url('../images/cursor_hand.png'), auto;
 	margin: 10px;
 	opacity: 1;
 	width: 70%;

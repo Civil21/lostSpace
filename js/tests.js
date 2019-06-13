@@ -3,9 +3,11 @@ function onKeyDown(event){
 		case 27:
 		if(menu){
 			menu = false;
+			game.play =true
 			document.querySelector("#container").style.display="none";
 		}else{
 			menu = true;
+			game.play = false
 			document.querySelector("#container").style.display="";
 		}			
 		break;
@@ -59,13 +61,90 @@ function onHover() {
   }
 }
 
+function selectFloatPlan(group,float){
+		var arr = [];
+		group.forEach(function(plan){
+			if(plan.float==float)arr.push(plan)
+		});
+		return arr;
+}
+var floats = [];
+var float = {
+	num: null,
+	station: null,
+}
+var floatNum = null
+
+function selectPlanToFloat(plan){
+	
+	if(float.num == null){
+		float.num = floats.length;
+		float.station = plan.station;
+	}
+	plan.target.set(float.station.position.x,float.station.position.y+5,float.station.position.z);
+	plan.float = float.num;
+	plan.station = null;
+}
+function removeFloat(float){
+	selectFloatPlan(miners,float.num).forEach(function(miner){
+		miner.station = float.station;
+		miner.float = null;
+	});
+	selectFloatPlan(wariors,float.num).forEach(function(warior){
+		warior.station = float.station;
+		warior.float = null;
+	});
+}
+function targetFloat(float, target){
+	
+}
+var selectSpaceObject = null
+function onClick(event){
+  	//console.log(event.button);
+	//console.log(event.which);
+	if(INTERSECTED && INTERSECTED.player == bluePlayer){
+		//console.log(INTERSECTED.player);
+		if(float.station &&float.station != INTERSECTED){
+			removeFloat(float);
+		}
+		//console.log(float);
+		switch(event.button){
+			case 0: 
+				if(INTERSECTED.miners().length>0){
+					selectPlanToFloat(INTERSECTED.miners()[0]);
+				}
+			break;
+			case 1:
+				console.log(selectFloatPlan(wariors,float.num));
+				var w = selectFloatPlan(wariors,float.num);
+				console.log(selectFloatPlan(wariors,float.num)[0].station);
+				removeFloat(float);
+				console.log(w.station);
+			break;
+			case 2:
+				if(INTERSECTED.wariors().length>0){
+					selectPlanToFloat(INTERSECTED.wariors()[0]);
+				}
+			break;
+		}
+	}
+	/*
+	if(INTERSECTED && INTERSECTED.isStation){
+		addWarior(bluePlayer);
+	}
+	*/
+}
+
 var menu = true;
 var game = {};
 function startTest(number){
 	menu= false
 	document.querySelector("#container").style.display="none";
 	document.body.background = "";
+	console.log()
+	document.querySelector("#activMenu").style.display="block";
 	initScene();
+	game.play = true;
 	game.var =number;
 }
 
@@ -240,33 +319,32 @@ const size =30, step = 10;
 var meshes = {};
 var scene,control,camera,renderer;
 var selector;
-function initScene()
-{
-		scene = new THREE.Scene();
-		camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
+function initScene(){
+	scene = new THREE.Scene();
+	camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
+	
+	loadingManager = new THREE.LoadingManager();
+	loadingManager.onProgress = function(item, loaded, total){
+		console.log(item, loaded, total);
+	};
+	loadingManager.onLoad = function(){
+		console.log("loaded all resources");
+		RESOURCES_LOADED = true;
+		onResourceLoad();
+	};
 
-		loadingManager = new THREE.LoadingManager();
-		loadingManager.onProgress = function(item, loaded, total){
-			console.log(item, loaded, total);
-		};
-		loadingManager.onLoad = function(){
-			console.log("loaded all resources");
-			RESOURCES_LOADED = true;
-			onResourceLoad();
-					};
+	gridView();
+	light();
 
-		gridView();
-		light();
-
-		selector = new THREE.Mesh( new THREE.TorusGeometry( 5, 0.3, 2, 32 ), new THREE.MeshBasicMaterial( { color: 0x990000 } ) );
-		selector.rotation.x =3.14/2;
-		  raycaster = new THREE.Raycaster();
-
-		renderer = new THREE.WebGLRenderer();
-		renderer.setSize(window.innerWidth,window.innerHeight);
-		document.body.appendChild(renderer.domElement);
-		control=new THREE.OrbitControls(camera,renderer.domElement);
-		camera.position.set(0,30,0);
+	selector = new THREE.Mesh( new THREE.TorusGeometry( 5, 0.3, 2, 32 ), new THREE.MeshBasicMaterial( { color: 0x000099 } ) );
+	selector.rotation.x =3.14/2;
+	raycaster = new THREE.Raycaster();
+	
+	renderer = new THREE.WebGLRenderer();
+	renderer.setSize(window.innerWidth,window.innerHeight);
+	document.body.appendChild(renderer.domElement);
+	control=new THREE.OrbitControls(camera,renderer.domElement);
+	camera.position.set(0,30,0);
 
 	for( var _key in models ){
 		(function(key){
@@ -326,6 +404,7 @@ function initScene()
 	window.addEventListener('resize', onWindowResize, false);
 	window.addEventListener('keydown', onKeyDown,false);
 	window.addEventListener('mousemove', onMouseMove, false);
+	document.onmousedown =onClick
 	
 	animate();
 }
@@ -334,20 +413,90 @@ function setPosition(object,x=0,z=0){
 	object.position.set(step*(x-size/step+0.5),0,step*(z-size/step+0.5));
 }
 
-var plans = [];
-function addPlans(station){
-	if(station.isStation){
-
-		var plan = models.SmallSpaceFighter.mesh.clone();
-
-		plan.position.set(station.position.x,station.position.y+1,station.position.z);
-		plan.player = station.player;
-		plan.material.color.setHex(0xff7788);
+//var plans = [];
+var wariors = [];
+var miners = [];
+function addMiner(player){
+	if(player.silver>=player.minerCost()){
+		player.silver -= player.minerCost();
+		var plan;
+		switch(player){
+			case redPlayer:
+				plan = models.minerRed.mesh.clone();
+			break;
+			case bluePlayer:
+				plan = models.minerBlue.mesh.clone();
+			break;
+		}
+		plan.player = player;
+		addPlan(plan,player.planet);
+		miners.push(plan);
 	}else{
-		console.log("This object not station, is"+station.name)
+		console.log('NEED MANY SILVER')
 	}
 }
-asteroids = [];
+function addWarior(player){
+	console.log(player.gold);
+	console.log(player.wariorCost());
+	if(player.gold>=player.wariorCost()){
+		player.gold -= player.wariorCost();
+		var plan;
+		switch(player){
+			case redPlayer:
+				plan = models.wariorRed.mesh.clone();
+			break;
+			case bluePlayer:
+				plan = models.wariorBlue.mesh.clone();
+			break;
+		}
+		plan.player = player;
+		addPlan(plan,player.planet);
+		wariors.push(plan)
+	}else{
+		console.log('NEED MANY GOOLD')
+	}
+}
+function addPlan(plan, planet){
+		//console.log(planet.position);
+		plan.position.set(planet.position.x,planet.position.y+5,planet.position.z);
+		plan.target = {x:0, y:0,z:0};
+		plan.target.set = function(x,y,z){
+			plan.target.x = x;
+			plan.target.y = y;
+			plan.target.z = z;
+		}
+		plan.run = setInterval(function() {
+			if(Math.abs(plan.position.x-plan.target.x)>0.1)
+				if(plan.position.x-plan.target.x<0){plan.position.x+=0.05}else{plan.position.x-=0.05}
+			if(Math.abs(plan.position.y-plan.target.y)>0.1)
+				if(plan.position.y-plan.target.y<0){plan.position.y+=0.05}else{plan.position.y-=0.05}
+			if(Math.abs(plan.position.z-plan.target.z)>0.1)		
+				if(plan.position.z-plan.target.z<0){plan.position.z+=0.05}else{plan.position.z-=0.05}
+
+      }, 1);
+		plan.station = planet;
+		//console.log(plan.position);
+		//plans.push(plan);
+		scene.add(plan)
+}
+function spaceObject(){
+	var arr = [];
+	asteroids.forEach(function(asteroid){
+		arr.push(asteroid);
+	});
+	arr.push(bluePlayer.planet);
+	arr.push(redPlayer.planet);
+	return arr;
+} 
+var asteroids = [];
+
+function selectStationPlan(group,station){
+		var arr = [];
+		group.forEach(function(plan){
+			if(plan.station == station) arr.push(plan);
+		});
+		return arr;
+}
 
 function addAsteroid(material,speed,size,x,y){
 	var asteroid = null;
@@ -389,30 +538,61 @@ function addAsteroid(material,speed,size,x,y){
 		asteroid = models["asteroidSilverFastBig"].mesh.clone();
 		break;
 	}
-	//console.log(asteroid.name+" create");
+	asteroid.wariors = function(){return selectStationPlan(wariors,asteroid)};
+	asteroid.miners = function(){return selectStationPlan(miners,asteroid)};
 	asteroid.canSelect= true;
-	//console.log(asteroid.canSelect)
+	asteroid.material=material;
+	asteroid.speed=speed;
+	asteroid.workCount = size*2;
 	setPosition(asteroid,x,y);
+	asteroid.rotation.set(Math.random()*360,Math.random()*360,Math.random()*360);
+	setInterval(function() {
+		if(asteroid.player && game.play){
+			switch(material){
+				case 0: 
+					if(asteroid.miners().length<=asteroid.workCount){
+						asteroid.player.gold += asteroid.miners().length*(asteroid.speed+1)
+					}else{
+						asteroid.player.gold += asteroid.workCount*(asteroid.speed+1);
+					}
+					
+					break;
+				case 1:
+					if(asteroid.miners().length<=asteroid.workCount){
+						asteroid.player.silver += asteroid.miners().length*(asteroid.speed+1)
+					}else{
+						asteroid.player.silver += asteroid.workCount*(asteroid.speed+1);
+					}
+				break;
+			}
+		}
+    }, 1000);
 	asteroids.push(asteroid);
 	scene.add(asteroid);
 	return asteroid;
 }
-var earth,mars;
+
 function addPlanet(command,x,y){
 	var planet;
 	switch(command){
 		case 0:
 			planet  = models.earth.mesh.clone();
-			earth = planet;
+			planet.player = bluePlayer;
+			bluePlayer.planet = planet;
 		break;
 		case 1: 
 			planet = models.mars.mesh.clone();
-			mars = planet;
+			planet.player = redPlayer;
 		break;
 	}
+	planet.player.planet = planet;
+	planet.wariors = function(){return selectStationPlan(wariors,planet)};
+	planet.miners = function(){return selectStationPlan(miners,planet)};
+	planet.isStation = true;
 	planet.canSelect= true;
 	setPosition(planet,x,y);
 	scene.add(planet);
+
 	return planet;
 }
 
@@ -438,6 +618,32 @@ function onResourceLoad(){
 		}
 	}	
 }
+function selectPlan(group,player){
+		var arr = [];
+		group.forEach(function(plan){
+			if(plan.player==player)arr.push(plan)
+		});
+		return arr;
+}
+
+var redPlayer={
+	name: "red",
+	silver: 0,
+	miners: function(){return selectPlan(miners,redPlayer);},
+	minerCost: function(){return redPlayer.miners().length*2},
+	gold: 8,
+	wariors: function(){return selectPlan(wariors,redPlayer);},
+	wariorCost: function(){return 3+redPlayer.wariors().length*3},
+};
+var bluePlayer={
+	name: "blue",
+	silver: 0,
+	miners: function(){return selectPlan(miners,bluePlayer);},
+	minerCost: function(){return bluePlayer.miners().length*2},
+	gold: 40,
+	wariors: function(){return selectPlan(wariors,bluePlayer);},
+	wariorCost: function(){return 3+bluePlayer.wariors().length*3},
+};
 
 function test1(){
 	
@@ -473,36 +679,11 @@ function test1(){
 	
 }
 
-function test2(){
-		meshes["w1"] = models.wariorRed.mesh.clone();
-	scene.add(meshes["w1"]);
-	setPosition(meshes["w1"],0,3);
-	meshes["w2"] = models.wariorBlue.mesh.clone();
-	scene.add(meshes["w2"]);
-	setPosition(meshes["w2"],0,4);
-	meshes["m1"] = models.minerRed.mesh.clone();
-	scene.add(meshes["m1"]);
-	setPosition(meshes["m1"],1,3);
-	meshes["m2"] = models.minerBlue.mesh.clone();
-	scene.add(meshes["m2"]);
-	setPosition(meshes["m2"],1,4);
-	
-	addPlanet(0,2,4);
-	addPlanet(1,2,3);
-	
-	
-	addAsteroid(0,0,0,0,0);
-	addAsteroid(0,0,1,0,1);
-	addAsteroid(0,0,2,0,2);
-	addAsteroid(0,1,0,1,0);
-	addAsteroid(0,1,1,1,1);
-	addAsteroid(0,1,2,1,2);
-	addAsteroid(1,0,0,2,0);
-	addAsteroid(1,0,1,2,1);
-	addAsteroid(1,0,2,2,2);
-	addAsteroid(1,1,0,3,0);
-	addAsteroid(1,1,1,3,1);
-	addAsteroid(1,1,2,3,2);
+function test2(){	
+	addPlanet(1,4,4);
+	addPlanet(0,3,3);
+	//addWarior(bluePlayer);
+
 
 }
 
@@ -510,7 +691,7 @@ function test3(){
 		addAsteroid(0,0,2,0,2);
 	console.log(asteroids[0]);
 }
-
+var angle = 0;
 function animate(){
 	requestAnimationFrame(animate);
 	
@@ -518,13 +699,40 @@ function animate(){
 		
 		return;
 	}
+
+	if(game.play){
+		document.getElementById("silverCount").innerText = bluePlayer.silver;
+		document.getElementById("goldCount").innerText = bluePlayer.gold;
+	}
+
+	asteroids.forEach(function(asteroid){
+		asteroid.rotation.z+=0.005;
+		asteroid.rotation.y+=0.005;
+	});
+
+	spaceObject().forEach(function(station){
+
+		for (var i = 0; i < station.wariors().length; i++) {
+			var warior = station.wariors()[i];
+      		var x = (2 * 3.14 / station.wariors().length) * (i + 1);
+      		warior.target.set(station.position.x+5 * Math.cos(x+(angle/360)*2*3.14), 0, station.position.z+5 * Math.sin(x+(angle/360)*2*3.14));
+      		//warior.rotation.y+=x;
+    	}
 	
-	  camera.lookAt(scene.position);
-  camera.updateMatrixWorld();
-  onHover();
-  control.update();
+		for (var i = 0; i < station.miners().length; i++) {
+			var miner = station.miners()[i];
+      		var x = (2 * 3.14 / station.miners().length) * (i + 1)+(angle/360)*2*3.14/2;
+      		miner.target.set(station.position.x+4 * Math.cos(x), 0, station.position.z+4 * Math.sin(x));
+    	}
+	});
+
+	
+	camera.lookAt(scene.position);
+ 	camera.updateMatrixWorld();
+  	onHover();
+  	control.update();
 
    //перевірка наведення
-	
+	angle+=1;
 	renderer.render(scene,camera);
 }
