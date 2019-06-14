@@ -308,9 +308,9 @@ function beforeInite(){
 			});
 		}else{
 			var objLoader = new THREE.OBJLoader(loadingManager);
-			objLoader.load(modelsPath+models[key].obj, function ( mesh ) {
+			objLoader.load(modelsPath+models[key].obj, function(mesh) {
 				mesh.traverse(function(node){
-					if( node instanceof THREE.Mesh ){
+					if(node instanceof THREE.Mesh){
 						node.castShadow = true;
 						node.receiveShadow = true;
 						if(node.material.length){
@@ -318,12 +318,12 @@ function beforeInite(){
 								node.material[i].color.setHex(models[key].color[i]);
 							}
 						}else{
-										if(models[key].texture){
+							if(models[key].texture){
 							node.material.map= new THREE.TextureLoader().load( "../images/"+models[key].texture );
-						}
+							}	
 							if(models[key].color){
 							node.material.color.setHex(models[key].color);
-						}
+							}
 						}
 					}
 				});
@@ -340,7 +340,7 @@ function beforeInite(){
 
 var floats = [];
 setInterval(function(){
-	if(true&& game.play){
+	if(false&& game.play){
 		//console.log("I ALIVE");
 		if(redPlayer.silver>=redPlayer.minerCost()){
 			addMiner(redPlayer);
@@ -465,8 +465,8 @@ function floatPlanPosition(locFloat){
 		//console.log("i("+x+") j("+y+")");
 		y++;
 	}
-	
 }
+
 function deletePlanToGroup(group,planGroup){
 	group.slice(group.indexOf(planGroup[0]),1);
 	planGroup[0].destroy();
@@ -523,9 +523,9 @@ function removeFloat(locFloat){
 			plan.float = null;
 		});
 	}
-	//selectStationPlan().forEach();
-	
+	//selectStationPlan().forEach();	
 }
+
 function targetFloat(locFloat, target){
 	var newFloat = new Object();
 	newFloat.num = floats.length;
@@ -699,6 +699,7 @@ function addPlan(plan, planet){
 	//plans.push(plan);
 	scene.add(plan)
 }
+
 function spaceObject(){
 	var arr = [];
 	asteroids.forEach(function(asteroid){

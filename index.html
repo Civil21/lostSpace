@@ -3,17 +3,31 @@
 <head>
 	<title>LostSpace Menu</title>
 	<link rel="stylesheet" type="text/css" href="css/main.css" />
-	<script src="js/three.js"></script>
-	<script src="js/OrbitControls.js"></script>
-	<script src="js/scenes.js"></script>
+	<script src="./js/three.js"></script>
+	<script src="./js/OBJLoader.js"></script>
+ 	<script src="./js/MTLLoader.js"></script>
+	<script src="./js/OrbitControls.js"></script>
+	<script src="./js/scenes.js"></script>
 </head>
-<body background="./images/main.jpg">
+<body background="./images/main.jpg" onload="beforeInite();">
+	<div id="activMenu">
+        <div style="text-align: center; padding-top: 10px; font-size: 32px">Earth</div>
+        <div class="info"><img src="images/gold.png"><div id="goldCount" style="margin-left: 10px">0</div></div>
+        <div class="info" style="margin-top: 30px; margin-left: 30px;"><img src="images/warior.png" onclick="addWarior(bluePlayer)"></div>
+        <div class="info"><img src="images/silver.png"><div id="silverCount" style="margin-left: 10px">0</div></div>
+        <div class="info" style="margin-left: 30px;"><img src="images/miner.png" onclick="addMiner(bluePlayer)"></div>
+        <div class="info">MinerCost</div>
+        <div class="info" ><div id="minerCost">0</div><img src="images/miner.png"></div>
+        <div class="info">WariorCost</div>
+        <div class="info"><div id="wariorCost">0 </div><img src="images/warior.png"></div>
+    </div>
 	<div id="container">
 		<div id="logo">LostSpace</div>
 		<div class="menu">
+			<a onclick="startMap(1);" class="button">Map 1</a>
+			<a onclick="startMap(2);" class="button">Map 2</a>
+			<a href="about.html" class="button">About</a>
 			<a href="tests/" class="button">Tests</a>
-			<a onclick="startScene(1);" class="button">Scene 1</a>
-			<a onclick="startScene(2);" class="button">Scene 2</a>
 		</div>
 		<footer>Create by CyberSpells <img src="images/logo.png" style="height: 24px; width: 24px;"></img></footer>
 	</div>
